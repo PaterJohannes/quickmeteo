@@ -48,6 +48,7 @@
     const dirs=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
     const compass=d=>dirs[Math.round(d/22.5)%16];
     function arrow(x,y,len,dx,dy){const x1=x,y1=y,x2=x+dx*len,y2=y+dy*len,a=Math.atan2(y2-y1,x2-x1),head=clamp(len*.16,3,14);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.moveTo(x2,y2);ctx.lineTo(x2-head*Math.cos(a-.55),y2-head*Math.sin(a-.55));ctx.moveTo(x2,y2);ctx.lineTo(x2-head*Math.cos(a+.55),y2-head*Math.sin(a+.55));ctx.stroke()}
+    function rainScale(mmPerHour){const rain=Math.max(0,mmPerHour);return rain<=1?rain:1+.25*Math.log1p(Math.min(rain,50)-1)/Math.log(50)}
     function dropPath(x,y,size){ctx.beginPath();ctx.moveTo(x,y-size*.76);ctx.bezierCurveTo(x-size*.07,y-size*.54,x-size*.4,y-size*.2,x-size*.43,y+size*.15);ctx.bezierCurveTo(x-size*.47,y+size*.52,x-size*.23,y+size*.73,x,y+size*.74);ctx.bezierCurveTo(x+size*.25,y+size*.73,x+size*.47,y+size*.51,x+size*.43,y+size*.15);ctx.bezierCurveTo(x+size*.39,y-size*.19,x+size*.08,y-size*.54,x,y-size*.76);ctx.closePath()}
     function waterDrop(x,y,size){
       ctx.save();
@@ -75,9 +76,10 @@
       ctx.beginPath();ctx.arc(CX,CY,TEMP_OUT,0,Math.PI*2);ctx.strokeStyle='rgba(245,250,255,.34)';ctx.lineWidth=1.5;ctx.stroke();if(storm){ctx.save();ctx.beginPath();ctx.rect(0,0,W,H);stormPath(data.lightningDensity,false);ctx.fillStyle='#070a10';ctx.fill('evenodd');ctx.restore()}else{ctx.beginPath();ctx.arc(CX,CY,OUTER_R,0,Math.PI*2);ctx.strokeStyle='rgba(245,250,255,.72)';ctx.lineWidth=2;ctx.stroke()}
       sunRays(data.ghi);
       const to=(data.dir+180)*Math.PI/180,dx=Math.sin(to),dy=-Math.cos(to),len=(2*OUTER_R)*Math.max(0,data.speed)/100,windWidth=clamp(1.25+data.speed*.022,1.25,4.8);ctx.lineCap='round';ctx.lineJoin='round';ctx.save();if(data.speed<100){ctx.beginPath();ctx.arc(CX,CY,OUTER_R,0,Math.PI*2);ctx.clip()}if(len>0){ctx.strokeStyle='rgba(76,0,8,.65)';ctx.lineWidth=windWidth+1.6;arrow(CX,CY,len,dx,dy);ctx.strokeStyle='rgb(255,35,55)';ctx.lineWidth=windWidth;ctx.shadowColor='rgba(75,0,8,.62)';ctx.shadowBlur=3;arrow(CX,CY,len,dx,dy)}ctx.restore();
-      if(data.rain>0||data.radarRain){const size=data.rain>0?(2*OUTER_R/1.5)*data.rain:70;waterDrop(CX,CY+size*.01,size)}
+      // Keep 1 mm/h at the circle diameter; compress heavier rain and fit the full drop.
+      if(data.rain>0||data.radarRain){const size=data.rain>0?(2*OUTER_R/1.5)*rainScale(data.rain):70;waterDrop(CX,CY+size*.01,size)}
       if(storm){ctx.save();stormPath(data.lightningDensity);ctx.strokeStyle='rgba(245,250,255,.9)';ctx.lineWidth=2.2;ctx.lineJoin='miter';ctx.shadowColor='rgba(130,180,220,.65)';ctx.shadowBlur=5;ctx.stroke();ctx.restore()}
-      $('formula').textContent=`GHI : longueur logarithmique des 12 rayons, 1000 W/m² = bord · Température au centre · Ciel clair / nuages · Pluie : 1 mm/h = diamètre (hauteur de la goutte), débordement au-delà · Vent : 100 km/h = diamètre · Orage : amplitude selon la densité de foudre prévue`}
+      $('formula').textContent=`GHI : longueur logarithmique des 12 rayons, 1000 W/m² = bord · Température au centre · Ciel clair / nuages · Pluie : 1 mm/h = diamètre (hauteur de la goutte), croissance logarithmique au-delà, hauteur plafonnée à 125 % du diamètre · Vent : 100 km/h = diamètre · Orage : amplitude selon la densité de foudre prévue`}
     async function radarRainAt(lat,lon){
       try{
         const response=await fetch('https://api.rainviewer.com/public/weather-maps.json',{signal:AbortSignal.timeout(3500)});
