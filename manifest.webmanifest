@@ -1,0 +1,26 @@
+{
+  "id": "./",
+  "name": "QuickMétéo",
+  "short_name": "QuickMétéo",
+  "description": "La météo en une figure : soleil, température, ciel, pluie et vent.",
+  "lang": "fr",
+  "start_url": "./quickmeteo.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#06080d",
+  "theme_color": "#0877e8",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
