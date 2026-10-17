@@ -67,7 +67,7 @@
     function sunRays(ghi){const q=Math.log1p(clamp(ghi,0,1000))/Math.log1p(1000);if(q<=0)return;const length=OUTER_R*q;ctx.save();ctx.strokeStyle='#ffef00';ctx.lineWidth=4;ctx.lineCap='round';ctx.shadowColor='rgba(255,239,0,.58)';ctx.shadowBlur=7;for(let i=0;i<12;i++){const a=-Math.PI/2+i*Math.PI/6;ctx.beginPath();ctx.moveTo(CX,CY);ctx.lineTo(CX+Math.cos(a)*length,CY+Math.sin(a)*length);ctx.stroke()}ctx.restore()}
     function annulus(inner,outer,style){ctx.beginPath();ctx.arc(CX,CY,outer,0,Math.PI*2);ctx.arc(CX,CY,inner,0,Math.PI*2,true);ctx.fillStyle=style;ctx.fill()}
     function draw(data){
-      const [tr,tg,tb]=colorOf(data.temp),clear=clamp(1-data.cloud/100,0,1),skyEdge=TEMP_OUT+SKY_W*clear,storm=[95,96,99].includes(data.code);
+      const [tr,tg,tb]=colorOf(data.temp),clear=clamp(1-data.cloud/100,0,1),skyEdge=Math.sqrt(TEMP_OUT**2+clear*(OUTER_R**2-TEMP_OUT**2)),storm=[95,96,99].includes(data.code);
       ctx.clearRect(0,0,W,H);ctx.fillStyle='#070a10';ctx.fillRect(0,0,W,H);
       if(storm){stormPath(data.lightningDensity);ctx.fillStyle='rgb(39,43,49)';ctx.fill()}
       const temp=ctx.createRadialGradient(CX,CY,0,CX,CY,TEMP_OUT);temp.addColorStop(0,`rgb(${tr},${tg},${tb})`);temp.addColorStop(.55,`rgb(${tr},${tg},${tb})`);temp.addColorStop(1,`rgb(${Math.round(tr*.78)},${Math.round(tg*.78)},${Math.round(tb*.78)})`);ctx.beginPath();ctx.arc(CX,CY,TEMP_OUT,0,Math.PI*2);ctx.fillStyle=temp;ctx.fill();
