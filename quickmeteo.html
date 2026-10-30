@@ -247,7 +247,7 @@
     }
 
     .temp-scale {
-      background: linear-gradient(90deg, #e6e6e6 0%, #ffaaff 11.11%, #910991 22.22%, #24186a 27.78%, #554eb1 33.33%, #3e79c6 38.89%, #4bb698 44.44%, #59d049 50%, #59d049 55.56%, #80d83e 57.78%, #ebd735 61.11%, #ffdc00 64.44%, #ff8c00 71.11%, #e56d53 72.22%, #be3066 77.78%, #6b1527 88.89%, #e32620 100%)
+      background: linear-gradient(90deg, #e6e6e6 0%, #ffaaff 11.11%, #910991 22.22%, #24186a 27.78%, #554eb1 33.33%, #3e79c6 38.89%, #4bb698 44.44%, #59d049 50%, #59d049 55.56%, #80d83e 57.78%, #ebd735 61.11%, #ffdc00 64.44%, #ff8c00 71.11%, #ff7066 72.22%, #e32620 77.78%, #6b1527 88.89%, #e32620 100%)
     }
 
     .sky-scale {
@@ -315,7 +315,7 @@
     <section class="stage" aria-label="Figure météorologique actuelle"><canvas id="field" width="820" height="820"></canvas><div class="formula" id="formula">Température au centre · Ciel en anneau · Rayons, pluie et vent superposés</div><div class="loading on" id="loading">Lecture du ciel…</div></section>
     <aside>
       <section class="card"><h2>Conditions</h2><div class="place" id="place">Chargement…</div><div class="place-sub" id="placeSub">Recherche en cours</div><div class="reading"><span>Heure locale</span><strong id="localTime">—</strong></div><div class="reading solar-reading"><span>Irradiance solaire (GHI)</span><strong id="solar">— W/m²</strong></div><div class="reading"><span>Température</span><strong id="temp">—</strong></div><div class="reading"><span>Précipitations</span><strong id="rain">—</strong></div><div class="reading"><span>Nébulosité</span><strong id="cloud">—</strong></div><div class="reading"><span>Vent</span><strong id="wind">—</strong></div><div class="reading"><span>Densité de foudre prévue · ECMWF</span><strong id="lightning">—</strong></div></section>
-      <section class="card"><h2>Lecture du dessin</h2><div class="legend"><div class="legend-row"><span>Rayons · GHI · linéaire</span><div class="scale solar-scale"></div><div class="scale-note"><span>0 W/m²</span><span>1000 W/m² · bord</span></div></div><div class="legend-row"><span>Disque · T°</span><div class="scale temp-scale" aria-label="Échelle de moins 40 à plus 50 degrés, inspirée de Ventusky : gris, violet, bleu, vert, jaune à 18 °C, orange à 24 °C, puis rouge"></div><div class="scale-note"><span>−40 °C</span><span>0 °C</span><span>+50 °C</span></div></div><div class="legend-row"><span>Anneau · ciel</span><div class="scale sky-scale"></div><div class="scale-note"><span>bleu · ciel clair</span><span>gris · nuages</span></div></div></div></section>
+      <section class="card"><h2>Lecture du dessin</h2><div class="legend"><div class="legend-row"><span>Rayons · GHI · linéaire</span><div class="scale solar-scale"></div><div class="scale-note"><span>0 W/m²</span><span>1000 W/m² · bord</span></div></div><div class="legend-row"><span>Disque · T°</span><div class="scale temp-scale" aria-label="Échelle de moins 40 à plus 50 degrés, inspirée de Ventusky : gris, violet, bleu, vert, jaune à 18 °C, orange à 24 °C, rouge clair à 25 °C, rouge coquelicot à 30 °C"></div><div class="scale-note"><span>−40 °C</span><span>0 °C</span><span>+50 °C</span></div></div><div class="legend-row"><span>Anneau · ciel</span><div class="scale sky-scale"></div><div class="scale-note"><span>bleu · ciel clair</span><span>gris · nuages</span></div></div></div></section>
       <div class="error" id="error"></div><p class="source">Données météorologiques : <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open‑Meteo</a> · Radar : <a href="https://www.rainviewer.com/" target="_blank" rel="noreferrer">RainViewer</a>. Représentation expérimentale.</p>
     </aside>
   </main>
@@ -358,8 +358,8 @@
       [15, [235, 215, 53]],
       [18, [255, 220, 0]],
       [24, [255, 140, 0]],
-      [25, [229, 109, 83]],
-      [30, [190, 48, 102]],
+      [25, [255, 112, 102]],
+      [30, [227, 38, 32]],
       [40, [107, 21, 39]],
       [50, [227, 38, 32]]
     ];
