@@ -312,9 +312,9 @@
   <main class="shell">
     <header><div><div class="eyebrow">QuickMétéo</div><h1>Quel temps fait-il à…</h1></div><div class="time" id="time">Conditions actuelles</div></header>
     <form id="search"><input id="query" value="Chamblac" aria-label="Ville ou demande, à saisir ou dicter avec le clavier" autocomplete="off" autocapitalize="words" enterkeyhint="search"><button id="submit" type="submit">Dessiner</button></form>
-    <section class="stage" aria-label="Figure météorologique actuelle"><canvas id="field" width="820" height="820"></canvas><div class="formula" id="formula">Température au centre · Ciel en anneau · Rayons, pluie et vent superposés</div><div class="loading on" id="loading">Lecture du ciel…</div></section>
+    <section class="stage" aria-label="Figure météorologique actuelle"><canvas id="field" width="820" height="820"></canvas><div class="formula" id="formula">Température au centre · Ciel en anneau · Rayons, pluie ou neige et vent superposés</div><div class="loading on" id="loading">Lecture du ciel…</div></section>
     <aside>
-      <section class="card"><h2>Conditions</h2><div class="place" id="place">Chargement…</div><div class="place-sub" id="placeSub">Recherche en cours</div><div class="reading"><span>Heure locale</span><strong id="localTime">—</strong></div><div class="reading solar-reading"><span>Irradiance solaire (GHI)</span><strong id="solar">— W/m²</strong></div><div class="reading"><span>Température</span><strong id="temp">—</strong></div><div class="reading"><span>Précipitations</span><strong id="rain">—</strong></div><div class="reading"><span>Nébulosité</span><strong id="cloud">—</strong></div><div class="reading"><span>Vent</span><strong id="wind">—</strong></div><div class="reading"><span>Densité de foudre prévue · ECMWF</span><strong id="lightning">—</strong></div></section>
+      <section class="card"><h2>Conditions</h2><div class="place" id="place">Chargement…</div><div class="place-sub" id="placeSub">Recherche en cours</div><div class="reading"><span>Heure locale</span><strong id="localTime">—</strong></div><div class="reading solar-reading"><span>Irradiance solaire (GHI)</span><strong id="solar">— W/m²</strong></div><div class="reading"><span>Température</span><strong id="temp">—</strong></div><div class="reading"><span>Précipitations</span><strong id="rain">—</strong></div><div class="reading"><span>Neige fraîche</span><strong id="snow">—</strong></div><div class="reading"><span>Nébulosité</span><strong id="cloud">—</strong></div><div class="reading"><span>Vent</span><strong id="wind">—</strong></div><div class="reading"><span>Densité de foudre prévue · ECMWF</span><strong id="lightning">—</strong></div></section>
       <section class="card"><h2>Lecture du dessin</h2><div class="legend"><div class="legend-row"><span>Rayons · GHI · linéaire</span><div class="scale solar-scale"></div><div class="scale-note"><span>0 W/m²</span><span>1000 W/m² · bord</span></div></div><div class="legend-row"><span>Disque · T°</span><div class="scale temp-scale" aria-label="Échelle de moins 40 à plus 50 degrés : blanc à 0 °C devenant progressivement violet très saturé à −30 °C, vert de plus en plus saturé de 17 à 1 °C, jaune à 18 °C, orange à 24 °C, rouge clair à 25 °C, rouge coquelicot à 30 °C, puis rouge de plus en plus saturé de 31 à 45 °C"></div><div class="scale-note"><span>−40 °C</span><span>0 °C</span><span>+50 °C</span></div></div><div class="legend-row"><span>Anneau · ciel</span><div class="scale sky-scale"></div><div class="scale-note"><span>bleu · ciel clair</span><span>gris · nuages</span></div></div></div></section>
       <div class="error" id="error"></div><p class="source">Données météorologiques : <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open‑Meteo</a> · Radar : <a href="https://www.rainviewer.com/" target="_blank" rel="noreferrer">RainViewer</a>. Représentation expérimentale.</p>
     </aside>
@@ -452,13 +452,50 @@
       }
     }
 
-    // Pluie : échelle linéaire jusqu’à 1 mm, puis croissance logarithmique comprimée.
+    // Précipitations : échelle linéaire jusqu’à 1 mm de pluie ou 1 cm de neige, puis croissance comprimée.
 
-    function rainScale(mmPerHour) {
-      const rain = Math.max(0, mmPerHour);
-      return rain <= 1 ? rain : 1 + .25 * Math.log1p(Math.min(rain, 50) - 1) / Math.log(50)
+    function precipitationScale(amount) {
+      const value = Math.max(0, amount);
+      return value <= 1 ? value : 1 + .25 * Math.log1p(Math.min(value, 50) - 1) / Math.log(50)
     }
 
+
+    // Cristal de neige : six branches symétriques et leurs ramifications.
+    function snowCrystal(x, y, radius) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = -Math.PI / 2 + i * Math.PI / 3;
+        const dx = Math.cos(angle), dy = Math.sin(angle);
+        ctx.moveTo(0, 0);
+        ctx.lineTo(dx * radius, dy * radius);
+        for (const fraction of [.42, .68]) {
+          const bx = dx * radius * fraction, by = dy * radius * fraction;
+          const length = radius * (fraction === .42 ? .22 : .18);
+          for (const side of [-1, 1]) {
+            const branchAngle = angle + side * Math.PI / 3;
+            ctx.moveTo(bx, by);
+            ctx.lineTo(bx + Math.cos(branchAngle) * length,
+              by + Math.sin(branchAngle) * length);
+          }
+        }
+      }
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      const width = clamp(radius * .025, 1.5, 7);
+      // Le contour sombre garde le cristal lisible sur le disque blanc à 0 °C.
+      ctx.strokeStyle = 'rgba(8,45,78,.85)';
+      ctx.lineWidth = width + 3;
+      ctx.shadowColor = 'rgba(0,0,0,.65)';
+      ctx.shadowBlur = 7;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = '#e9faff';
+      ctx.lineWidth = width;
+      ctx.stroke();
+      ctx.restore();
+    }
 
     function dropPath(x, y, size) {
       ctx.beginPath();
@@ -592,7 +629,7 @@
       ctx.fill()
     }
 
-    // DESSIN : disque de température, anneau du ciel, soleil, vent, pluie et orage.
+    // DESSIN : disque de température, anneau du ciel, soleil, vent, pluie ou neige et orage.
     // L’ordre des tracés détermine leur superposition.
 
     function draw(data) {
@@ -668,9 +705,12 @@
         gustArrow(CX, CY, len, gustLen, dx, dy)
       }
       ctx.restore();
-      // À 1 mm / 60 min, la goutte atteint le diamètre du cercle ; au-delà, sa croissance est comprimée.
-      if (data.rain > 0) {
-        const size = data.rain > 0 ? (2 * OUTER_R / 1.5) * rainScale(data.rain) : 70;
+      // La neige remplace la goutte dès qu’un cumul de neige est présent.
+      // À 1 cm / 60 min, le cristal atteint le diamètre du cercle.
+      if (data.snow > 0) {
+        snowCrystal(CX, CY, OUTER_R * precipitationScale(data.snow));
+      } else if (data.rain > 0) {
+        const size = (2 * OUTER_R / 1.5) * precipitationScale(data.rain);
         waterDrop(CX, CY + size * .01, size)
       }
       if (storm) {
@@ -685,7 +725,7 @@
         ctx.restore()
       }
       $('formula').textContent =
-        `GHI : longueur proportionnelle des 12 rayons, 1000 W/m² = bord · Température au centre · Ciel clair / nuages · Pluie : 1 mm / 60 min = diamètre (hauteur de la goutte), croissance logarithmique au-delà, hauteur plafonnée à 125 % du diamètre · Vent : 100 km/h = rayon, pointillés jusqu’aux rafales · Orage : amplitude selon la densité de foudre prévue`
+        `GHI : longueur proportionnelle des 12 rayons, 1000 W/m² = bord · Température au centre · Ciel clair / nuages · Pluie : 1 mm / 60 min = diamètre (hauteur de la goutte), croissance logarithmique au-delà, hauteur plafonnée à 125 % du diamètre · Neige : cristal à six branches, 1 cm / 60 min = diamètre, croissance comprimée au-delà ; remplace la goutte en présence de neige · Vent : 100 km/h = rayon, pointillés jusqu’aux rafales · Orage : amplitude selon la densité de foudre prévue`
     }
     // DONNÉES : lecture du dernier radar RainViewer ; fonction conservée, non appelée actuellement.
 
@@ -746,7 +786,7 @@
     // Efface les anciennes observations avant chaque recherche et en cas d’échec.
     function clearConditions() {
       localZone = null;
-      for (const id of ['localTime', 'solar', 'temp', 'rain', 'cloud', 'wind', 'lightning']) {
+      for (const id of ['localTime', 'solar', 'temp', 'rain', 'snow', 'cloud', 'wind', 'lightning']) {
         $(id).textContent = '—';
       }
       $('time').textContent = 'Conditions indisponibles';
@@ -777,27 +817,34 @@
         const geo = await gr.json(),
           loc = geo.results?.[0];
         if (!loc) throw new Error(`Ville introuvable : ${city}`);
-        // 2. Conditions actuelles et quatre derniers cumuls de précipitations de 15 minutes.
+        // 2. Conditions actuelles et quatre derniers cumuls de précipitations et de neige de 15 minutes.
         const wr = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,cloud_cover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,shortwave_radiation_instant,weather_code&minutely_15=precipitation&past_minutely_15=4&forecast_minutely_15=0&timezone=auto&forecast_days=1`,
+          `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,cloud_cover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,shortwave_radiation_instant,weather_code&minutely_15=precipitation,snowfall&past_minutely_15=4&forecast_minutely_15=0&timezone=auto&forecast_days=1`,
           { signal: AbortSignal.timeout(15000) }
         );
         if (!wr.ok) throw new Error('Données météorologiques indisponibles.');
         const w = await wr.json(),
           c = w.current,
-          quarterly = w.minutely_15?.precipitation;
-        if (!Array.isArray(quarterly) || quarterly.length < 4 || quarterly.slice(-4).some(v => !Number.isFinite(v))) throw new Error('Cumul de pluie sur 60 minutes indisponible.');
+          quarterly = w.minutely_15?.precipitation,
+          snowfall = w.minutely_15?.snowfall;
+        if (!Array.isArray(quarterly) || quarterly.length < 4 || quarterly.slice(-4).some(v => !Number.isFinite(v))) throw new Error('Cumul de précipitations sur 60 minutes indisponible.');
+        if (!Array.isArray(snowfall) || snowfall.length < 4 ||
+            snowfall.slice(-4).some(v => !Number.isFinite(v))) {
+          throw new Error('Cumul de neige sur 60 minutes indisponible.');
+        }
         const required = ['temperature_2m', 'cloud_cover', 'wind_speed_10m',
           'wind_direction_10m', 'weather_code'];
         if (!c || !required.every(key => Number.isFinite(c[key])) || typeof c.time !== 'string') {
           throw new Error('Conditions actuelles indisponibles.');
         }
-        // 3. Addition des quatre cumuls : pluie sur les 60 dernières minutes.
+        // 3. Cumuls sur 60 minutes : précipitations totales en mm, neige fraîche en cm.
         const rain60 = quarterly.slice(-4).reduce((sum, v) => sum + Math.max(0, v), 0),
+          snow60 = snowfall.slice(-4).reduce((sum, v) => sum + Math.max(0, v), 0),
           data = {
             ghi: Math.max(0, c.shortwave_radiation_instant || 0),
             temp: c.temperature_2m,
             rain: rain60,
+            snow: snow60,
             cloud: c.cloud_cover,
             speed: c.wind_speed_10m,
             gust: Number.isFinite(c.wind_gusts_10m) ? c.wind_gusts_10m : null,
@@ -815,6 +862,9 @@
         $('solar').textContent = Math.round(data.ghi) + ' W/m²';
         $('temp').textContent = data.temp.toFixed(1) + ' °C';
         $('rain').textContent = data.rain.toFixed(1) + ' mm / 60 min';
+        $('snow').textContent = data.snow.toLocaleString('fr-FR', {
+          maximumFractionDigits: 2
+        }) + ' cm / 60 min';
         $('cloud').textContent = Math.round(data.cloud) + ' %';
         $('wind').textContent = compass(data.dir) + ' · ' + Math.round(data.speed) + ' km/h' + (data.gust !== null ? ' · rafales ' + Math.round(data.gust) + ' km/h' : '');
         $('time').textContent = 'Actualisé · ' + c.time.slice(8, 10) + '/' + c.time.slice(5, 7) +
