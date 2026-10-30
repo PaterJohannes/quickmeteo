@@ -314,7 +314,7 @@
     <form id="search"><input id="query" value="Chamblac" aria-label="Ville ou demande, à saisir ou dicter avec le clavier" autocomplete="off" autocapitalize="words" enterkeyhint="search"><button id="submit" type="submit">Dessiner</button></form>
     <section class="stage" aria-label="Figure météorologique actuelle"><canvas id="field" width="820" height="820"></canvas><div class="formula" id="formula">Température au centre · Ciel en anneau · Rayons, pluie et vent superposés</div><div class="loading on" id="loading">Lecture du ciel…</div></section>
     <aside>
-      <section class="card"><h2>Conditions</h2><div class="place" id="place">Toulouse</div><div class="place-sub" id="placeSub">Recherche en cours</div><div class="reading"><span>Heure locale</span><strong id="localTime">—</strong></div><div class="reading solar-reading"><span>Irradiance solaire (GHI)</span><strong id="solar">— W/m²</strong></div><div class="reading"><span>Température</span><strong id="temp">—</strong></div><div class="reading"><span>Précipitations</span><strong id="rain">—</strong></div><div class="reading"><span>Nébulosité</span><strong id="cloud">—</strong></div><div class="reading"><span>Vent</span><strong id="wind">—</strong></div><div class="reading"><span>Densité de foudre prévue · ECMWF</span><strong id="lightning">—</strong></div></section>
+      <section class="card"><h2>Conditions</h2><div class="place" id="place">Chargement…</div><div class="place-sub" id="placeSub">Recherche en cours</div><div class="reading"><span>Heure locale</span><strong id="localTime">—</strong></div><div class="reading solar-reading"><span>Irradiance solaire (GHI)</span><strong id="solar">— W/m²</strong></div><div class="reading"><span>Température</span><strong id="temp">—</strong></div><div class="reading"><span>Précipitations</span><strong id="rain">—</strong></div><div class="reading"><span>Nébulosité</span><strong id="cloud">—</strong></div><div class="reading"><span>Vent</span><strong id="wind">—</strong></div><div class="reading"><span>Densité de foudre prévue · ECMWF</span><strong id="lightning">—</strong></div></section>
       <section class="card"><h2>Lecture du dessin</h2><div class="legend"><div class="legend-row"><span>Rayons · GHI · linéaire</span><div class="scale solar-scale"></div><div class="scale-note"><span>0 W/m²</span><span>1000 W/m² · bord</span></div></div><div class="legend-row"><span>Disque · T°</span><div class="scale temp-scale" aria-label="Échelle Ventusky de moins 40 à plus 50 degrés, du gris et violet froid vers le bleu, le vert, le jaune, l’orange puis le rouge coquelicot"></div><div class="scale-note"><span>−40 °C</span><span>0 °C</span><span>+50 °C</span></div></div><div class="legend-row"><span>Anneau · ciel</span><div class="scale sky-scale"></div><div class="scale-note"><span>bleu · ciel clair</span><span>gris · nuages</span></div></div></div></section>
       <div class="error" id="error"></div><p class="source">Données météorologiques : <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open‑Meteo</a> · Radar : <a href="https://www.rainviewer.com/" target="_blank" rel="noreferrer">RainViewer</a>. Représentation expérimentale.</p>
     </aside>
@@ -362,10 +362,11 @@
       [40, [107, 21, 39]],
       [50, [227, 38, 32]]
     ];
-    let localZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    let localZone = null;
 
 
     function updateLocalTime() {
+      if (!localZone) return;
       $('localTime').textContent = new Intl.DateTimeFormat('fr-FR', {
         timeZone: localZone,
         hour: '2-digit',
@@ -746,6 +747,16 @@
         return null
       }
     }
+    // Efface les anciennes observations avant chaque recherche et en cas d’échec.
+    function clearConditions() {
+      localZone = null;
+      for (const id of ['localTime', 'solar', 'temp', 'rain', 'cloud', 'wind', 'lightning']) {
+        $(id).textContent = '—';
+      }
+      $('time').textContent = 'Conditions indisponibles';
+      ctx.clearRect(0, 0, W, H);
+    }
+
     let requestSeq = 0;
     // RECHERCHE : localise la ville, récupère la météo, puis actualise le dessin et les valeurs.
 
@@ -756,11 +767,15 @@
       $('submit').disabled = true;
       $('loading').classList.add('on');
       $('error').textContent = '';
-      $('lightning').textContent = '—';
+      clearConditions();
+      $('place').textContent = city;
+      $('placeSub').textContent = 'Recherche en cours';
+      $('time').textContent = 'Chargement…';
       try {
         // 1. Recherche des coordonnées géographiques de la ville.
         const gr = await fetch(
-          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=fr&format=json`
+          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=fr&format=json`,
+          { signal: AbortSignal.timeout(15000) }
         );
         if (!gr.ok) throw new Error('Service de localisation indisponible.');
         const geo = await gr.json(),
@@ -768,13 +783,19 @@
         if (!loc) throw new Error(`Ville introuvable : ${city}`);
         // 2. Conditions actuelles et quatre derniers cumuls de précipitations de 15 minutes.
         const wr = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,cloud_cover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,shortwave_radiation_instant,weather_code&minutely_15=precipitation&past_minutely_15=4&forecast_minutely_15=0&timezone=auto&forecast_days=1`
+          `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,cloud_cover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,shortwave_radiation_instant,weather_code&minutely_15=precipitation&past_minutely_15=4&forecast_minutely_15=0&timezone=auto&forecast_days=1`,
+          { signal: AbortSignal.timeout(15000) }
         );
         if (!wr.ok) throw new Error('Données météorologiques indisponibles.');
         const w = await wr.json(),
           c = w.current,
           quarterly = w.minutely_15?.precipitation;
         if (!Array.isArray(quarterly) || quarterly.length < 4 || quarterly.slice(-4).some(v => !Number.isFinite(v))) throw new Error('Cumul de pluie sur 60 minutes indisponible.');
+        const required = ['temperature_2m', 'cloud_cover', 'wind_speed_10m',
+          'wind_direction_10m', 'weather_code'];
+        if (!c || !required.every(key => Number.isFinite(c[key])) || typeof c.time !== 'string') {
+          throw new Error('Conditions actuelles indisponibles.');
+        }
         // 3. Addition des quatre cumuls : pluie sur les 60 dernières minutes.
         const rain60 = quarterly.slice(-4).reduce((sum, v) => sum + Math.max(0, v), 0),
           data = {
@@ -789,7 +810,8 @@
             lightningDensity: null
           };
         // 4. Heure locale, dessin et valeurs affichées dans le panneau.
-        localZone = w.timezone || localZone;
+        if (seq !== requestSeq) return;
+        localZone = w.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
         updateLocalTime();
         draw(data);
         $('place').textContent = loc.name;
@@ -812,8 +834,13 @@
           }) + (result.unit ? ' ' + result.unit : '')
         });
       } catch (e) {
-        $('error').textContent = e.message
+        if (seq !== requestSeq) return;
+        clearConditions();
+        $('place').textContent = city;
+        $('placeSub').textContent = 'Données indisponibles';
+        $('error').textContent = e.name === 'TimeoutError' ? 'Délai de récupération dépassé. Réessayez.' : e.message;
       } finally {
+        if (seq !== requestSeq) return;
         $('submit').disabled = false;
         $('loading').classList.remove('on')
       }
