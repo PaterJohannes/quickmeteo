@@ -263,6 +263,32 @@
       justify-content: space-between
     }
 
+    /* Le zéro est à 40/90 de l’échelle −40…+50, exactement sous le blanc. */
+    .temperature-note {
+      position: relative;
+      display: block;
+      height: 1em
+    }
+
+    .temperature-note span {
+      position: absolute;
+      top: 0;
+      white-space: nowrap
+    }
+
+    .temperature-note span:first-child {
+      left: 0
+    }
+
+    .temperature-note span:nth-child(2) {
+      left: 44.444444%;
+      transform: translateX(-50%)
+    }
+
+    .temperature-note span:last-child {
+      right: 0
+    }
+
     .error {
       color: #ff8b9a;
       font-size: .82rem;
@@ -315,7 +341,7 @@
     <section class="stage" aria-label="Figure météorologique actuelle"><canvas id="field" width="820" height="820"></canvas><div class="formula" id="formula">Température au centre · Ciel en anneau · Rayons, pluie ou neige et vent superposés</div><div class="loading on" id="loading">Lecture du ciel…</div></section>
     <aside>
       <section class="card"><h2>Conditions</h2><div class="place" id="place">Chargement…</div><div class="place-sub" id="placeSub">Recherche en cours</div><div class="reading"><span>Heure locale</span><strong id="localTime">—</strong></div><div class="reading solar-reading"><span>Irradiance solaire (GHI)</span><strong id="solar">— W/m²</strong></div><div class="reading"><span>Température</span><strong id="temp">—</strong></div><div class="reading"><span>Précipitations</span><strong id="rain">—</strong></div><div class="reading"><span>Neige fraîche</span><strong id="snow">—</strong></div><div class="reading"><span>Nébulosité</span><strong id="cloud">—</strong></div><div class="reading"><span>Vent</span><strong id="wind">—</strong></div><div class="reading"><span>Densité de foudre prévue · ECMWF</span><strong id="lightning">—</strong></div></section>
-      <section class="card"><h2>Lecture du dessin</h2><div class="legend"><div class="legend-row"><span>Rayons · GHI · linéaire</span><div class="scale solar-scale"></div><div class="scale-note"><span>0 W/m²</span><span>1000 W/m² · bord</span></div></div><div class="legend-row"><span>Disque · T°</span><div class="scale temp-scale" aria-label="Échelle de moins 40 à plus 50 degrés : blanc à 0 °C devenant progressivement violet très saturé à −30 °C, vert de plus en plus saturé de 17 à 1 °C, jaune à 18 °C, orange à 24 °C, rouge clair à 25 °C, rouge coquelicot à 30 °C, puis rouge de plus en plus saturé de 31 à 45 °C"></div><div class="scale-note"><span>−40 °C</span><span>0 °C</span><span>+50 °C</span></div></div><div class="legend-row"><span>Anneau · ciel</span><div class="scale sky-scale"></div><div class="scale-note"><span>bleu · ciel clair</span><span>gris · nuages</span></div></div></div></section>
+      <section class="card"><h2>Lecture du dessin</h2><div class="legend"><div class="legend-row"><span>Rayons · GHI · linéaire</span><div class="scale solar-scale"></div><div class="scale-note"><span>0 W/m²</span><span>1000 W/m² · bord</span></div></div><div class="legend-row"><span>Disque · T°</span><div class="scale temp-scale" aria-label="Échelle de moins 40 à plus 50 degrés : blanc à 0 °C devenant progressivement violet très saturé à −30 °C, vert de plus en plus saturé de 17 à 1 °C, jaune à 18 °C, orange à 24 °C, rouge clair à 25 °C, rouge coquelicot à 30 °C, puis rouge de plus en plus saturé de 31 à 45 °C"></div><div class="scale-note temperature-note"><span>−40 °C</span><span>0 °C</span><span>+50 °C</span></div></div><div class="legend-row"><span>Anneau · ciel</span><div class="scale sky-scale"></div><div class="scale-note"><span>bleu · ciel clair</span><span>gris · nuages</span></div></div></div></section>
       <div class="error" id="error"></div><p class="source">Données météorologiques : <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open‑Meteo</a> · Radar : <a href="https://www.rainviewer.com/" target="_blank" rel="noreferrer">RainViewer</a>. Représentation expérimentale.</p>
     </aside>
   </main>
