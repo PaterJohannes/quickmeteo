@@ -4,7 +4,11 @@
 <head>
   <meta charset="UTF-8">
   <title>QuickMétéo</title>
-  <meta http-equiv="refresh" content="0; url=quickmeteo.html">
+  <script>
+    // Transmet les paramètres de recherche et le fragment à l’application.
+    window.location.replace('quickmeteo.html' + window.location.search + window.location.hash);
+  </script>
+  <noscript><meta http-equiv="refresh" content="0; url=quickmeteo.html"></noscript>
 </head>
 <body>
   <a href="quickmeteo.html">Ouvrir QuickMétéo</a>
