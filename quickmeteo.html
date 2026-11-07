@@ -672,11 +672,18 @@
       // Le pas 7 parcourt les 20 zones sans répétition et alterne les anneaux.
       const { areaStart, sectors, sector } = humidityZones[(index * 7 + 19) % 20];
       const angle = (sector + Math.random()) * 2 * Math.PI / sectors;
-      const radius = (TEMP_OUT - 4) * Math.sqrt((areaStart + sectors * Math.random()) / 20);
+      // Une goutte sur deux de l’anneau extérieur peut toucher le contour.
+      const radius = sectors === 9 && sector % 2 === 0
+        ? TEMP_OUT - Math.random() * 1.5
+        : TEMP_OUT * Math.sqrt((areaStart + sectors * Math.random()) / 20);
       return [CX + radius * Math.cos(angle), CY + radius * Math.sin(angle)];
     });
 
     function drawHumidity(humidity) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(CX, CY, TEMP_OUT, 0, Math.PI * 2);
+      ctx.clip();
       ctx.beginPath();
       for (const [x, y] of humidityDropPositions.slice(0, humidity ?? 0)) {
         ctx.moveTo(x, y - 3.5);
@@ -689,6 +696,7 @@
       ctx.strokeStyle = 'rgba(13,48,75,.58)';
       ctx.lineWidth = .8;
       ctx.stroke();
+      ctx.restore();
     }
 
     function draw(data) {
