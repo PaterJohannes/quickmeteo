@@ -340,7 +340,7 @@
     <form id="search"><input id="query" value="Chamblac" aria-label="Ville ou demande, à saisir ou dicter avec le clavier" autocomplete="off" autocapitalize="words" enterkeyhint="search"><button id="submit" type="submit">Dessiner</button></form>
     <section class="stage" aria-label="Figure météorologique actuelle"><canvas id="field" width="820" height="820"></canvas><div class="formula" id="formula">Température au centre · Ciel en anneau · Rayons, pluie ou neige et vent superposés</div><div class="loading on" id="loading">Lecture du ciel…</div></section>
     <aside>
-      <section class="card"><h2>Conditions</h2><div class="place" id="place">Chargement…</div><div class="place-sub" id="placeSub">Recherche en cours</div><div class="reading"><span>Heure locale</span><strong id="localTime">—</strong></div><div class="reading solar-reading"><span>Irradiance solaire (GHI)</span><strong id="solar">— W/m²</strong></div><div class="reading"><span>Température</span><strong id="temp">—</strong></div><div class="reading"><span>Précipitations</span><strong id="rain">—</strong></div><div class="reading"><span>Neige fraîche</span><strong id="snow">—</strong></div><div class="reading"><span>Nébulosité</span><strong id="cloud">—</strong></div><div class="reading"><span>Vent</span><strong id="wind">—</strong></div><div class="reading"><span>Densité de foudre prévue · ECMWF</span><strong id="lightning">—</strong></div></section>
+      <section class="card"><h2>Conditions</h2><div class="place" id="place">Chargement…</div><div class="place-sub" id="placeSub">Recherche en cours</div><div class="reading"><span>Heure locale</span><strong id="localTime">—</strong></div><div class="reading solar-reading"><span>Irradiance solaire (GHI)</span><strong id="solar">— W/m²</strong></div><div class="reading"><span>Température</span><strong id="temp">—</strong></div><div class="reading"><span>Humidité relative</span><strong id="humidity">—</strong></div><div class="reading"><span>Précipitations</span><strong id="rain">—</strong></div><div class="reading"><span>Neige fraîche</span><strong id="snow">—</strong></div><div class="reading"><span>Nébulosité</span><strong id="cloud">—</strong></div><div class="reading"><span>Vent</span><strong id="wind">—</strong></div><div class="reading"><span>Densité de foudre prévue · ECMWF</span><strong id="lightning">—</strong></div></section>
       <section class="card"><h2>Lecture du dessin</h2><div class="legend"><div class="legend-row"><span>Rayons · GHI · linéaire</span><div class="scale solar-scale"></div><div class="scale-note"><span>0 W/m²</span><span>1000 W/m² · bord</span></div></div><div class="legend-row"><span>Disque · T°</span><div class="scale temp-scale" aria-label="Échelle de moins 40 à plus 50 degrés : blanc à 0 °C devenant progressivement violet très saturé à −30 °C, vert très pâle à 1 °C devenant progressivement vert intense à 17 °C, jaune à 18 °C, orange à 24 °C, rouge clair à 25 °C, rouge coquelicot à 30 °C, puis rouge de plus en plus saturé de 31 à 45 °C"></div><div class="scale-note temperature-note"><span>−40 °C</span><span>0 °C</span><span>+50 °C</span></div></div><div class="legend-row"><span>Anneau · ciel</span><div class="scale sky-scale"></div><div class="scale-note"><span>bleu · ciel clair</span><span>gris · nuages</span></div></div></div></section>
       <div class="error" id="error"></div><p class="source">Données météorologiques : <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">Open‑Meteo</a> · Radar : <a href="https://www.rainviewer.com/" target="_blank" rel="noreferrer">RainViewer</a>. Représentation expérimentale.</p>
     </aside>
@@ -658,6 +658,28 @@
     // DESSIN : disque de température, anneau du ciel, soleil, vent, pluie ou neige et orage.
     // L’ordre des tracés détermine leur superposition.
 
+    // Positions fixes, uniformes en surface sur le disque.
+    const humidityDropPositions = Array.from({ length: 100 }, () => {
+      const angle = Math.random() * 2 * Math.PI;
+      const radius = (TEMP_OUT - 4) * Math.sqrt(Math.random());
+      return [CX + radius * Math.cos(angle), CY + radius * Math.sin(angle)];
+    });
+
+    function drawHumidity(humidity) {
+      ctx.beginPath();
+      for (const [x, y] of humidityDropPositions.slice(0, humidity ?? 0)) {
+        ctx.moveTo(x, y - 3.5);
+        ctx.bezierCurveTo(x + 1, y - 1, x + 4.5, y + 2.5, x, y + 2.5);
+        ctx.bezierCurveTo(x - 4.5, y + 2.5, x - 1, y - 1, x, y - 3.5);
+        ctx.closePath();
+      }
+      ctx.fillStyle = 'rgba(225,248,255,.64)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(13,48,75,.58)';
+      ctx.lineWidth = .8;
+      ctx.stroke();
+    }
+
     function draw(data) {
       const [tr, tg, tb] = colorOf(data.temp), clear = clamp(1 - data.cloud / 100, 0, 1), skyEdge = Math
         .sqrt(TEMP_OUT ** 2 + clear * (OUTER_R ** 2 - TEMP_OUT ** 2)), storm = [95, 96, 99].includes(
@@ -678,6 +700,7 @@
       ctx.arc(CX, CY, TEMP_OUT, 0, Math.PI * 2);
       ctx.fillStyle = temp;
       ctx.fill();
+      drawHumidity(data.humidity);
       if (skyEdge > TEMP_OUT) {
         const sky = ctx.createRadialGradient(CX, CY, TEMP_OUT, CX, CY, skyEdge);
         sky.addColorStop(0, 'rgb(22,143,234)');
@@ -845,7 +868,7 @@
         if (!loc) throw new Error(`Ville introuvable : ${city}`);
         // 2. Conditions actuelles et quatre derniers cumuls de précipitations et de neige de 15 minutes.
         const wr = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,cloud_cover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,shortwave_radiation_instant,weather_code&minutely_15=precipitation,snowfall&past_minutely_15=4&forecast_minutely_15=0&timezone=auto&forecast_days=1`,
+          `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,relative_humidity_2m,cloud_cover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,shortwave_radiation_instant,weather_code&minutely_15=precipitation,snowfall&past_minutely_15=4&forecast_minutely_15=0&timezone=auto&forecast_days=1`,
           { signal: AbortSignal.timeout(15000) }
         );
         if (!wr.ok) throw new Error('Données météorologiques indisponibles.');
@@ -869,6 +892,8 @@
           data = {
             ghi: Math.max(0, c.shortwave_radiation_instant || 0),
             temp: c.temperature_2m,
+            humidity: Number.isFinite(c.relative_humidity_2m)
+              ? clamp(Math.round(c.relative_humidity_2m), 0, 100) : null,
             rain: rain60,
             snow: snow60,
             cloud: c.cloud_cover,
@@ -887,6 +912,7 @@
         $('placeSub').textContent = [loc.admin1, loc.country].filter(Boolean).join(' · ');
         $('solar').textContent = Math.round(data.ghi) + ' W/m²';
         $('temp').textContent = data.temp.toFixed(1) + ' °C';
+        $('humidity').textContent = data.humidity === null ? '—' : data.humidity + ' %';
         $('rain').textContent = data.rain.toFixed(1) + ' mm / 60 min';
         $('snow').textContent = data.snow.toLocaleString('fr-FR', {
           maximumFractionDigits: 2
