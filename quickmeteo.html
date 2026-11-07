@@ -674,15 +674,15 @@
       const angle = (sector + Math.random()) * 2 * Math.PI / sectors;
       // Une goutte sur deux de l’anneau extérieur peut toucher le contour.
       const radius = sectors === 9 && sector % 2 === 0
-        ? TEMP_OUT - Math.random() * 1.5
-        : TEMP_OUT * Math.sqrt((areaStart + sectors * Math.random()) / 20);
+        ? OUTER_R - Math.random() * 1.5
+        : OUTER_R * Math.sqrt((areaStart + sectors * Math.random()) / 20);
       return [CX + radius * Math.cos(angle), CY + radius * Math.sin(angle)];
     });
 
     function drawHumidity(humidity) {
       ctx.save();
       ctx.beginPath();
-      ctx.arc(CX, CY, TEMP_OUT, 0, Math.PI * 2);
+      ctx.arc(CX, CY, OUTER_R, 0, Math.PI * 2);
       ctx.clip();
       ctx.beginPath();
       for (const [x, y] of humidityDropPositions.slice(0, humidity ?? 0)) {
@@ -719,7 +719,6 @@
       ctx.arc(CX, CY, TEMP_OUT, 0, Math.PI * 2);
       ctx.fillStyle = temp;
       ctx.fill();
-      drawHumidity(data.humidity);
       if (skyEdge > TEMP_OUT) {
         const sky = ctx.createRadialGradient(CX, CY, TEMP_OUT, CX, CY, skyEdge);
         sky.addColorStop(0, 'rgb(22,143,234)');
@@ -737,6 +736,7 @@
       ctx.strokeStyle = 'rgba(245,250,255,.34)';
       ctx.lineWidth = 1.5;
       ctx.stroke();
+      drawHumidity(data.humidity);
       if (storm) {
         ctx.save();
         ctx.beginPath();
