@@ -658,25 +658,11 @@
     // DESSIN : disque de température, anneau du ciel, soleil, vent, pluie ou neige et orage.
     // L’ordre des tracés détermine leur superposition.
 
-    // Vingt zones de même aire, parcourues du centre au bord et autour du disque.
-    // Chaque groupe de vingt gouttes ajoute une position aléatoire par zone.
-    const humidityZones = [];
-    let areaStart = 0;
-    for (const sectors of [1, 3, 7, 9]) {
-      for (let sector = 0; sector < sectors; sector++) {
-        humidityZones.push({ areaStart, sectors, sector });
-      }
-      areaStart += sectors;
-    }
-    const humidityDropsPerPercent = 5;
-    const humidityDropPositions = Array.from({ length: 100 * humidityDropsPerPercent }, (_, index) => {
-      // Le pas 7 parcourt les 20 zones sans répétition et alterne les anneaux.
-      const { areaStart, sectors, sector } = humidityZones[(index * 7 + 19) % 20];
-      const angle = (sector + Math.random()) * 2 * Math.PI / sectors;
-      // Une goutte sur deux de l’anneau extérieur peut toucher le contour.
-      const radius = sectors === 9 && sector % 2 === 0
-        ? OUTER_R - Math.random() * 1.5
-        : OUTER_R * Math.sqrt((areaStart + sectors * Math.random()) / 20);
+    const humidityDropsPerPercent = 10;
+    const humidityDropPositions = Array.from({ length: 100 * humidityDropsPerPercent }, () => {
+      const angle = 2 * Math.PI * Math.random();
+      // Le carré du rayon suit l’aire du disque depuis le centre.
+      const radius = OUTER_R * Math.sqrt(Math.random());
       return [CX + radius * Math.cos(angle), CY + radius * Math.sin(angle)];
     });
 
