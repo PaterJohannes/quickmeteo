@@ -658,31 +658,35 @@
     // DESSIN : disque de température, anneau du ciel, soleil, vent, pluie ou neige et orage.
     // L’ordre des tracés détermine leur superposition.
 
-    const humidityDropsPerPercent = 10;
-    const humidityDropPositions = Array.from({ length: 100 * humidityDropsPerPercent }, () => {
+    const humiditySpheresPerPercent = 10;
+    const humiditySpherePositions = Array.from({ length: 100 * humiditySpheresPerPercent }, () => {
       const angle = 2 * Math.PI * Math.random();
       // Le carré du rayon suit l’aire du disque depuis le centre.
       const radius = OUTER_R * Math.sqrt(Math.random());
       return [CX + radius * Math.cos(angle), CY + radius * Math.sin(angle)];
     });
 
+    // Prépare une sphère éclairée en haut à gauche, réutilisée pour tout le semis.
+    const humiditySphere = document.createElement('canvas');
+    humiditySphere.width = humiditySphere.height = 6;
+    const sphereCtx = humiditySphere.getContext('2d');
+    const sphereGradient = sphereCtx.createRadialGradient(2.1, 2.0, 0, 3, 3, 2.75);
+    sphereGradient.addColorStop(0, 'rgba(250,254,255,.94)');
+    sphereGradient.addColorStop(.48, 'rgba(178,221,242,.78)');
+    sphereGradient.addColorStop(1, 'rgba(27,70,103,.66)');
+    sphereCtx.fillStyle = sphereGradient;
+    sphereCtx.beginPath();
+    sphereCtx.arc(3, 3, 2.75, 0, Math.PI * 2);
+    sphereCtx.fill();
+
     function drawHumidity(humidity) {
       ctx.save();
       ctx.beginPath();
       ctx.arc(CX, CY, OUTER_R, 0, Math.PI * 2);
       ctx.clip();
-      ctx.beginPath();
-      for (const [x, y] of humidityDropPositions.slice(0, (humidity ?? 0) * humidityDropsPerPercent)) {
-        ctx.moveTo(x, y - 3.5);
-        ctx.bezierCurveTo(x + 1, y - 1, x + 4.5, y + 2.5, x, y + 2.5);
-        ctx.bezierCurveTo(x - 4.5, y + 2.5, x - 1, y - 1, x, y - 3.5);
-        ctx.closePath();
+      for (const [x, y] of humiditySpherePositions.slice(0, (humidity ?? 0) * humiditySpheresPerPercent)) {
+        ctx.drawImage(humiditySphere, x - 3, y - 3);
       }
-      ctx.fillStyle = 'rgba(225,248,255,.64)';
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(13,48,75,.58)';
-      ctx.lineWidth = .8;
-      ctx.stroke();
       ctx.restore();
     }
 
