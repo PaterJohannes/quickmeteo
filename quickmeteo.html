@@ -695,7 +695,7 @@
         Math.round(clamp(humidity, 0, 100) * humiditySpheresPerPercent));
       for (let i = 0; i < count; i++) {
         const [x, y] = humiditySpherePositions[i];
-        ctx.drawImage(humiditySphere, x - 5, y - 5);
+        ctx.drawImage(humiditySphere, x - 2.5, y - 2.5, 5, 5);
       }
       ctx.restore();
     }
