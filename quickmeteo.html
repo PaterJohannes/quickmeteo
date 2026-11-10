@@ -666,26 +666,36 @@
       return [CX + radius * Math.cos(angle), CY + radius * Math.sin(angle)];
     });
 
-    // Prépare une sphère éclairée en haut à gauche, réutilisée pour tout le semis.
+    // Sphères d'humidité : relief et contraste visibles même après réduction du canevas.
+    // Le semis conserve sa densité et sa distribution uniforme sur toute l'aire.
+    const HUMIDITY_SPHERE_SIZE = 10;
     const humiditySphere = document.createElement('canvas');
-    humiditySphere.width = humiditySphere.height = 6;
+    humiditySphere.width = humiditySphere.height = HUMIDITY_SPHERE_SIZE;
     const sphereCtx = humiditySphere.getContext('2d');
-    const sphereGradient = sphereCtx.createRadialGradient(2.1, 2.0, 0, 3, 3, 2.75);
-    sphereGradient.addColorStop(0, 'rgba(250,254,255,.94)');
-    sphereGradient.addColorStop(.48, 'rgba(178,221,242,.78)');
-    sphereGradient.addColorStop(1, 'rgba(27,70,103,.66)');
+    const sphereGradient = sphereCtx.createRadialGradient(3.1, 2.8, .3, 5.1, 5.2, 4.8);
+    sphereGradient.addColorStop(0, 'rgba(255,255,255,1)');
+    sphereGradient.addColorStop(.30, 'rgba(224,247,255,.98)');
+    sphereGradient.addColorStop(.68, 'rgba(104,177,216,.96)');
+    sphereGradient.addColorStop(1, 'rgba(14,49,81,.98)');
     sphereCtx.fillStyle = sphereGradient;
     sphereCtx.beginPath();
-    sphereCtx.arc(3, 3, 2.75, 0, Math.PI * 2);
+    sphereCtx.arc(5, 5, 4.65, 0, Math.PI * 2);
     sphereCtx.fill();
+    sphereCtx.strokeStyle = 'rgba(8,28,49,.85)';
+    sphereCtx.lineWidth = .65;
+    sphereCtx.stroke();
 
     function drawHumidity(humidity) {
+      if (!Number.isFinite(humidity)) return;
       ctx.save();
       ctx.beginPath();
       ctx.arc(CX, CY, OUTER_R, 0, Math.PI * 2);
       ctx.clip();
-      for (const [x, y] of humiditySpherePositions.slice(0, (humidity ?? 0) * humiditySpheresPerPercent)) {
-        ctx.drawImage(humiditySphere, x - 3, y - 3);
+      const count = Math.min(humiditySpherePositions.length,
+        Math.round(clamp(humidity, 0, 100) * humiditySpheresPerPercent));
+      for (let i = 0; i < count; i++) {
+        const [x, y] = humiditySpherePositions[i];
+        ctx.drawImage(humiditySphere, x - 5, y - 5);
       }
       ctx.restore();
     }
