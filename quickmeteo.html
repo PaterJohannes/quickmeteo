@@ -658,8 +658,9 @@
     // DESSIN : disque de température, anneau du ciel, soleil, vent, pluie ou neige et orage.
     // L’ordre des tracés détermine leur superposition.
 
-    const humiditySpheresPerPercent = 10;
-    const humiditySpherePositions = Array.from({ length: 100 * humiditySpheresPerPercent }, () => {
+    const humiditySpheresMax = 2400;
+    const humidityPowerExponent = 2;
+    const humiditySpherePositions = Array.from({ length: humiditySpheresMax }, () => {
       const angle = 2 * Math.PI * Math.random();
       // Le carré du rayon suit l’aire du disque depuis le centre.
       const radius = OUTER_R * Math.sqrt(Math.random());
@@ -692,7 +693,7 @@
       ctx.arc(CX, CY, OUTER_R, 0, Math.PI * 2);
       ctx.clip();
       const count = Math.min(humiditySpherePositions.length,
-        Math.round(clamp(humidity, 0, 100) * humiditySpheresPerPercent));
+        Math.round(humiditySpheresMax * Math.pow(clamp(humidity, 0, 100) / 100, humidityPowerExponent)));
       for (let i = 0; i < count; i++) {
         const [x, y] = humiditySpherePositions[i];
         ctx.drawImage(humiditySphere, x - 2.5, y - 2.5, 5, 5);
