@@ -856,7 +856,7 @@
     // Efface les anciennes observations avant chaque recherche et en cas d’échec.
     function clearConditions() {
       localZone = null;
-      for (const id of ['localTime', 'solar', 'temp', 'rain', 'snow', 'cloud', 'wind', 'lightning']) {
+      for (const id of ['localTime', 'solar', 'temp', 'humidity', 'rain', 'snow', 'cloud', 'wind', 'lightning']) {
         $(id).textContent = '—';
       }
       $('time').textContent = 'Conditions indisponibles';
