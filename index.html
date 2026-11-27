@@ -1,15 +1,20 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <title>Meteogram</title>
+
   <script>
-    // Transmet les paramètres de recherche et le fragment à l’application.
-    window.location.replace(´meteogram.html' + window.location.search + window.location.hash);
+    window.location.replace(
+      "meteogram.html" + window.location.search + window.location.hash
+    );
   </script>
-  <noscript><meta http-equiv="refresh" content="0; url=quickmeteo.html"></noscript>
+
+  <noscript>
+    <meta http-equiv="refresh" content="0; url=meteogram.html">
+  </noscript>
 </head>
+
 <body>
   <a href="meteogram.html">Ouvrir Meteogram</a>
 </body>
