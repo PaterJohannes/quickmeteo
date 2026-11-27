@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "QuickMétéo",
-  "short_name": "QuickMétéo",
+  "name": "meteogram",
+  "short_name": "meteogram",
   "description": "La météo en une figure : soleil, température, ciel, pluie et vent.",
   "lang": "fr",
   "start_url": "./quickmeteo.html",
