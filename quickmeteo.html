@@ -6,12 +6,12 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="description" content="QuickMétéo : irradiance solaire, température, nébulosité, pluie et vent en une figure.">
+  <meta name="description" content="meteogram : irradiance solaire, température, nébulosité, pluie et vent en une figure.">
   <meta name="theme-color" content="#0877e8">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="QuickMétéo">
-  <title>QuickMétéo</title>
+  <meta name="apple-mobile-web-app-title" content="meteogram">
+  <title>meteogram</title>
   <link rel="icon" type="image/png" href="./icon-192.png?v=2">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=2">
   <link rel="manifest" href="./manifest.webmanifest?v=2">
@@ -336,7 +336,7 @@
 </head>
 <body>
   <main class="shell">
-    <header><div><div class="eyebrow">QuickMétéo</div><h1>Quel temps fait-il à…</h1></div><div class="time" id="time">Conditions actuelles</div></header>
+    <header><div><div class="eyebrow">meteogram</div><h1>Quel temps fait-il à…</h1></div><div class="time" id="time">Conditions actuelles</div></header>
     <form id="search"><input id="query" value="Chamblac" aria-label="Ville ou demande, à saisir ou dicter avec le clavier" autocomplete="off" autocapitalize="words" enterkeyhint="search"><button id="submit" type="submit">Dessiner</button></form>
     <section class="stage" aria-label="Figure météorologique actuelle"><canvas id="field" width="820" height="820"></canvas><div class="formula" id="formula">Température au centre · Ciel en anneau · Rayons, pluie ou neige et vent superposés</div><div class="loading on" id="loading">Lecture du ciel…</div></section>
     <aside>
